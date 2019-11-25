@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import random
+import base64
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -112,6 +114,15 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+try:
+    BACKEND_SECRET = os.environ['BACKEND_SECRET']
+except KeyError as ex:
+    hint = base64.encodebytes(
+        bytearray(random.randint(0, 255) for _ in range(21))
+    ).decode('utf-8')
+    raise Exception('Error, expected backend secret to be set. eg: %s' % hint)
 
 
 # Static files (CSS, JavaScript, Images)
