@@ -6,8 +6,10 @@ from standup import settings
 
 #: Bad secret from external backend
 BAD_SECRET_RESPONSE = {
-    'payload': {}, 'message': 'Incorrect backend auth token',
-    'error': 'BAD_SECRET_RESPONSE'
+    'payload': {},
+    'message': 'Incorrect backend auth token',
+    'error': 'BAD_SECRET_RESPONSE',
+    'status': 500
 }
 
 
