@@ -9,3 +9,7 @@ def register_user(request):
     bad_secret, response = standup.utils.check_request_secret(request)
     if bad_secret:
         return response
+
+    return standup.utils.json_response(
+        **standup.utils.NOT_IMPLEMENTED_RESPONSE
+    )
