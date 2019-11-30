@@ -6,7 +6,7 @@ app_name = 'auth'
 
 urlpatterns = [
     path(
-        'user/register/', views.register_user,
+        'user/register', views.register_user,
         name='register-user'
     ),
 ]
