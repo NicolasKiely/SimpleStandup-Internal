@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User
+
 import standup.utils
 
 
@@ -52,6 +54,26 @@ def register_user(request):
     if len(user_email_name) == 0 or len(user_email_host) == 0:
         return standup.utils.json_response(**ARGS_INVALID_EMAIL)
 
+    if User.objects.filter(email__iexact=user_email).count() > 0:
+        return standup.utils.json_response(
+            payload={},
+            message='Email address already registered',
+            error='EMAIL_USED',
+            json_status=400,
+            http_status=400
+        )
+
+    # No problems found so far. Create user account.
+    user = User.objects.create_user(
+        username=user_email, email=user_email, password=user_pass,
+        first_name=user_fname, last_name=user_lname
+    )
+
     return standup.utils.json_response(
-        **standup.utils.NOT_IMPLEMENTED_RESPONSE
+        payload={
+            'email': user.email,
+            'fname': user.first_name,
+            'lname': user.last_name
+        },
+        message='Account created!'
     )
