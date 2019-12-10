@@ -1,3 +1,4 @@
+from django.contrib import auth
 from django.contrib.auth.models import User
 
 import standup.utils
@@ -11,7 +12,6 @@ ARGS_INVALID_EMAIL = {
 }
 
 
-# Create your views here.
 def register_user(request):
     """ POST handler for registering a user
 
@@ -75,5 +75,35 @@ def register_user(request):
             'fname': user.first_name,
             'lname': user.last_name
         },
-        message='Account created!'
+        message='Account created'
     )
+
+
+def authenticate_user(request):
+    """ POST Handler for authenticating frontend user
+
+    POST Parameters:
+    - user_email: Account address to login under
+    - user_pass: Given account password
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    user_email = args.get('user_email', '')
+    user_pass = args.get('user_pass', '')
+
+    user = auth.authenticate(username=user_email, password=user_pass)
+    if user and user.is_active:
+        return standup.utils.json_response(
+            payload={'email': user.email},
+            message='User authenticated'
+        )
+
+    else:
+        return standup.utils.json_response(
+            payload={},
+            message='Cannot authenticate account',
+            error='AUTH_FAILED',
+            json_status=403
+        )
