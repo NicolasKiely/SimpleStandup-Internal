@@ -47,12 +47,12 @@ def create_channel(request):
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**USER_DOES_NOT_EXIST)
 
-    if models.Channel.objects.filter(owner=user_email, channel_name__iexact=channel_name).count():
-        return standup.utils.json_response(CHANNEL_ALREADY_EXISTS)
+    if models.Channel.objects.filter(owner=user, name__iexact=channel_name).count():
+        return standup.utils.json_response(**CHANNEL_ALREADY_EXISTS)
 
-    channel = models.Channel(owner=user, channel_name=channel_name)
+    channel = models.Channel(owner=user, name=channel_name)
     channel.save()
     return standup.utils.json_response(
         payload={"channel_name": channel_name},
