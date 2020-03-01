@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+import channel.urls
 import login.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include(login.urls, namespace='auth')),
+    path("channel/", include(channel.urls, namespace="channel")),
 ]
