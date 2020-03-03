@@ -58,3 +58,25 @@ def create_channel(request):
         payload={"channel_name": channel_name},
         message="Channel created",
     )
+
+
+def list_channels(request, user_email: str):
+    """ GET handler to fetch channels for given user
+
+    GET Parameters:
+        - user_email
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    try:
+        user = User.objects.get(email__iexact=user_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**USER_DOES_NOT_EXIST)
+
+    channels = [
+        {"channel_name": channel.name, "owner": channel.owner.email}
+        for channel in user.channel_set.all()
+    ]
+    return standup.utils.json_response(payload=channels)
