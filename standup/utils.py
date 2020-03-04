@@ -79,6 +79,8 @@ def check_request_secret(request) -> Tuple[bool, Optional[JsonResponse], Dict]:
         return True, error_response, {}
 
     request_secret = request_args.get('BACKEND_SECRET')
+    if request_secret is None:
+        request_secret = request.headers.get("X-BACKEND-SECRET")
     if request_secret == settings.BACKEND_SECRET:
         return False, None, request_args
 

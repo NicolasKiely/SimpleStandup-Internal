@@ -70,7 +70,7 @@ def list_channels(request):
     if bad_secret:
         return response
 
-    user_email = request.headers.get("x_user_email")
+    user_email = request.headers.get("X-USER-EMAIL")
 
     try:
         user = User.objects.get(email__iexact=user_email)
