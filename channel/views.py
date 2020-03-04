@@ -60,15 +60,17 @@ def create_channel(request):
     )
 
 
-def list_channels(request, user_email: str):
+def list_channels(request):
     """ GET handler to fetch channels for given user
 
-    GET Parameters:
-        - user_email
+    GET Headers:
+        - x_user_email
     """
     bad_secret, response, args = standup.utils.check_request_secret(request)
     if bad_secret:
         return response
+
+    user_email = request.headers.get("x_user_email")
 
     try:
         user = User.objects.get(email__iexact=user_email)
