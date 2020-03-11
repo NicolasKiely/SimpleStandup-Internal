@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 
 from channel import models
+from channel import utils
 import standup.utils
 
 
@@ -23,6 +24,13 @@ CHANNEL_ALREADY_EXISTS = {
     "error": "CHANNEL_EXISTS",
     "json_status": 400,
     "http_status": 400
+}
+
+CHANNEL_NOT_FOUND = {
+    "message": "No channel found for this user",
+    "error": "CHANNEL_NOT_FOUND",
+    "json_status": 404,
+    "http_status": 404
 }
 
 
@@ -64,7 +72,7 @@ def list_channels(request):
     """ GET handler to fetch channels for given user
 
     GET Headers:
-        - x_user_email
+        - X-USER-EMAIL
     """
     bad_secret, response, args = standup.utils.check_request_secret(request)
     if bad_secret:
@@ -82,3 +90,36 @@ def list_channels(request):
         for channel in user.channel_set.all()
     ]
     return standup.utils.json_response(payload=channels)
+
+
+def get_channel_users(request):
+    """ GET handler to fetch members of a channel
+
+    GET HEADERS:
+        - X-USER-EMAIL
+
+    PARAMETERS:
+        - owner: Address of owner
+        - channel_name: Name of channel
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    user_email = request.headers.get("X-USER-EMAIL")
+    owner = request.GET.get("owner", "")
+    channel_name = request.GET.get("channel_name", "")
+
+    try:
+        channel = models.Channel.objects.filter(owner=owner, name=channel_name)
+    except models.Channel.DoesNotExist:
+        return standup.utils.json_response(CHANNEL_NOT_FOUND)
+
+    members = utils.get_channel_members(channel)
+    member_emails = [member.email.lower() for member in members]
+
+    if user_email in member_emails:
+        # Successfully found channel
+        return standup.utils.json_response(payload=member_emails)
+
+    return standup.utils.json_response(CHANNEL_NOT_FOUND)
