@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'standup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DB_ENGINE = os.environ.get("DB_BACKEND", "django.db.backends.sqlite3")
+DB_ENGINE = os.environ.get("DB_ENGINE", "django.db.backends.sqlite3")
 DB_NAME = os.environ.get("DB_NAME", os.path.join(BASE_DIR, "db.sqlite3"))
 DB_HOSTNAME = os.environ.get("DB_HOSTNAME")
 DB_PORT = os.environ.get("DB_PORT")
