@@ -86,7 +86,11 @@ def list_channels(request):
         return standup.utils.json_response(**USER_DOES_NOT_EXIST)
 
     channels = [
-        {"channel_name": channel.name, "owner": channel.owner.email}
+        {
+            "channel_name": channel.name,
+            "owner": channel.owner.email,
+            "channel_id": channel.id
+        }
         for channel in user.channel_set.all()
     ]
     return standup.utils.json_response(payload=channels)
