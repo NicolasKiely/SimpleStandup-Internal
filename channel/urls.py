@@ -8,4 +8,5 @@ urlpatterns = [
     path("create", views.create_channel, name="create"),
     path("list", views.list_channels, name="list"),
     path("members", views.get_channel_users, name="members"),
+    path("archive", views.archive_channel, name="archive"),
 ]

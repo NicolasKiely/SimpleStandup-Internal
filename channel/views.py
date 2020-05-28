@@ -12,6 +12,13 @@ ARGS_NO_CHANNEL_NAME = {
     "http_status": 400
 }
 
+ARGS_INVALID_CHANNEL = {
+    "message": "Invalid channel id given",
+    "error": "INVALID_ID",
+    "json_status": 400,
+    "http_status": 400
+}
+
 USER_DOES_NOT_EXIST = {
     "message": "Could not identify user",
     "error": "NO_USER",
@@ -89,11 +96,51 @@ def list_channels(request):
         {
             "channel_name": channel.name,
             "owner": channel.owner.email,
-            "channel_id": channel.id
+            "channel_id": channel.id,
+            "archived": channel.archived,
         }
         for channel in user.channel_set.all()
     ]
     return standup.utils.json_response(payload=channels)
+
+
+def archive_channel(request):
+    """ POST handler to archive a channel for a given user
+
+    GET Headers:
+        - X-USER-EMAIL
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    user_email = request.headers.get("X-USER-EMAIL")
+    try:
+        channel_id = int(args.get("channel_id"))
+    except ValueError:
+        return standup.utils.json_response(**ARGS_INVALID_CHANNEL)
+
+    try:
+        channel = models.Channel.objects.get(pk=channel_id)
+    except models.Channel.DoesNotExist:
+        return standup.utils.json_response(CHANNEL_NOT_FOUND)
+
+    members = utils.get_channel_members(channel)
+    member_emails = [member.email.lower() for member in members]
+
+    if user_email not in member_emails:
+        return standup.utils.json_response(CHANNEL_NOT_FOUND)
+
+    if user_email == channel.owner.email:
+        # Archive as owner
+        channel.archived = True
+        channel.save()
+    # Otherwise remove user from group
+
+    return standup.utils.json_response(
+        payload={"channel_id": channel_id},
+        message="Channel archived"
+    )
 
 
 def get_channel_users(request):
