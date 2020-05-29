@@ -64,7 +64,20 @@ def create_channel(request):
     except User.DoesNotExist:
         return standup.utils.json_response(**USER_DOES_NOT_EXIST)
 
-    if models.Channel.objects.filter(owner=user, name__iexact=channel_name).count():
+    prexisting = models.Channel.objects.filter(
+        owner=user, name__iexact=channel_name
+    ).first()
+    if prexisting:
+        # Channel already exists
+        if prexisting.archived:
+            # Channel is archived, so restore it
+            prexisting.archived = False
+            prexisting.save()
+            return standup.utils.json_response(
+                payload={"channel_name": channel_name},
+                message="Channel created"
+            )
+        # Duplicate channel error
         return standup.utils.json_response(**CHANNEL_ALREADY_EXISTS)
 
     channel = models.Channel(owner=user, name=channel_name)
