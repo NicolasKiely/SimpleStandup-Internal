@@ -5,42 +5,6 @@ from channel import utils
 import standup.utils
 
 
-ARGS_NO_CHANNEL_NAME = {
-    "message": "No channel name given",
-    "error": "INVALID_NAME",
-    "json_status": 400,
-    "http_status": 400
-}
-
-ARGS_INVALID_CHANNEL = {
-    "message": "Invalid channel id given",
-    "error": "INVALID_ID",
-    "json_status": 400,
-    "http_status": 400
-}
-
-USER_DOES_NOT_EXIST = {
-    "message": "Could not identify user",
-    "error": "NO_USER",
-    "json_status": 400,
-    "http_status": 400
-}
-
-CHANNEL_ALREADY_EXISTS = {
-    "message": "Channel already exists",
-    "error": "CHANNEL_EXISTS",
-    "json_status": 400,
-    "http_status": 400
-}
-
-CHANNEL_NOT_FOUND = {
-    "message": "No channel found for this user",
-    "error": "CHANNEL_NOT_FOUND",
-    "json_status": 404,
-    "http_status": 404
-}
-
-
 def create_channel(request):
     """ POST handler for creating new channel
 
@@ -57,12 +21,12 @@ def create_channel(request):
 
     if not channel_name:
         # Assert that channel name is given
-        return standup.utils.json_response(**ARGS_NO_CHANNEL_NAME)
+        return standup.utils.json_response(**utils.ARGS_NO_CHANNEL_NAME)
 
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
 
     prexisting = models.Channel.objects.filter(
         owner=user, name__iexact=channel_name
@@ -78,7 +42,7 @@ def create_channel(request):
                 message="Channel created"
             )
         # Duplicate channel error
-        return standup.utils.json_response(**CHANNEL_ALREADY_EXISTS)
+        return standup.utils.json_response(**utils.CHANNEL_ALREADY_EXISTS)
 
     channel = models.Channel(owner=user, name=channel_name)
     channel.save()
@@ -103,7 +67,7 @@ def list_channels(request):
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
 
     channels = [
         {
@@ -120,7 +84,7 @@ def list_channels(request):
 def archive_channel(request):
     """ POST handler to archive a channel for a given user
 
-    GET Headers:
+    POST Headers:
         - X-USER-EMAIL
     """
     bad_secret, response, args = standup.utils.check_request_secret(request)
@@ -128,21 +92,10 @@ def archive_channel(request):
         return response
 
     user_email = request.headers.get("X-USER-EMAIL")
-    try:
-        channel_id = int(args.get("channel_id"))
-    except ValueError:
-        return standup.utils.json_response(**ARGS_INVALID_CHANNEL)
-
-    try:
-        channel = models.Channel.objects.get(pk=channel_id)
-    except models.Channel.DoesNotExist:
-        return standup.utils.json_response(CHANNEL_NOT_FOUND)
-
-    members = utils.get_channel_members(channel)
-    member_emails = [member.email.lower() for member in members]
-
-    if user_email not in member_emails:
-        return standup.utils.json_response(CHANNEL_NOT_FOUND)
+    channel_id = args.get("channel_id")
+    err_response, channel, _ = utils.get_channel_by_member(user_email, channel_id)
+    if err_response:
+        return err_response
 
     if user_email == channel.owner.email:
         # Archive as owner
@@ -177,7 +130,7 @@ def get_channel_users(request):
     try:
         channel = models.Channel.objects.filter(owner=owner, name=channel_name)
     except models.Channel.DoesNotExist:
-        return standup.utils.json_response(CHANNEL_NOT_FOUND)
+        return standup.utils.json_response(**utils.CHANNEL_NOT_FOUND)
 
     members = utils.get_channel_members(channel)
     member_emails = [member.email.lower() for member in members]
@@ -186,4 +139,47 @@ def get_channel_users(request):
         # Successfully found channel
         return standup.utils.json_response(payload=member_emails)
 
-    return standup.utils.json_response(CHANNEL_NOT_FOUND)
+    return standup.utils.json_response(**utils.CHANNEL_NOT_FOUND)
+
+
+def invite_user_to_channel(request):
+    """ POST handler to handle request to invite user to channel
+
+    POST Headers:
+        - X-USER-EMAIL
+
+    POST Parameters:
+        - channel_id: ID of channel to invite user to
+        - invite_email: Account address to create channel for
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    invite_email = args.get("invite_email").lower()
+    user_email = request.headers.get("X-USER-EMAIL").lower()
+    channel_id = args.get("channel_id")
+    err_response, channel, members = utils.get_channel_by_member(
+        user_email, channel_id
+    )
+    if err_response:
+        return err_response
+
+    if user_email != channel.owner.email.lower():
+        return standup.utils.json_response(**utils.CHANNEL_OWNER_PERMISSION)
+
+    if user_email == invite_email:
+        return standup.utils.json_response(**utils.CANT_INVITE_SELF)
+
+    if invite_email in [member.email.lower() for member in members]:
+        return standup.utils.json_response(**utils.USER_ALREADY_INVITED)
+
+    try:
+        invite_user = User.objects.get(email__iexact=invite_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+
+    return standup.utils.json_response(
+        payload={"invite_email": invite_user.email},
+        message="Invite sent to user"
+    )

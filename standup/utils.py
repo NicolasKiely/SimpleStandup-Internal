@@ -31,9 +31,9 @@ NOT_IMPLEMENTED_RESPONSE = {
 
 
 def json_response(
-        payload: Optional[Union[List, Dict]]=None,
-        message: str=None, error: str=None, json_status: int=200,
-        http_status: int=200
+        payload: Optional[Union[List, Dict]] = None,
+        message: str = None, error: str = None, json_status: int = 200,
+        http_status: int = 200
 ):
     """ Helper function to create Django json response
 
