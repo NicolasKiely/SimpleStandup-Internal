@@ -107,11 +107,21 @@ def archive_channel(request):
         # Archive as owner
         channel.archived = True
         channel.save()
-    # Otherwise remove user from group
+        msg = "Archived channel"
+    else:
+        # Leave channel for user
+        try:
+            models.ChannelMember.objects.get(
+                channel=channel, user__email=user_email
+            ).delete()
+        except models.ChannelMember.DoesNotExist:
+            return standup.utils.json_response(
+                **utils.CHANNEL_NOT_FOUND
+            )
+        msg = "Left channel"
 
     return standup.utils.json_response(
-        payload={"channel_id": channel_id},
-        message="Channel archived"
+        payload={"channel_id": channel_id}, message=msg
     )
 
 
