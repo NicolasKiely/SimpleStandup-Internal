@@ -67,7 +67,8 @@ USER_ALREADY_INVITED = {
 def get_channel_members(channel: models.Channel) -> List[User]:
     """ Returns list of members under a channel """
     owner = channel.owner
-    return [owner]
+    members = channel.channelmember_set.exclude(user=owner)
+    return [owner] + [member.user for member in members]
 
 
 def get_channel_by_member(

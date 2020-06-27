@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 
 from channel import models
 from channel import utils
@@ -165,6 +166,7 @@ def invite_user_to_channel(request):
     if err_response:
         return err_response
 
+    # Verification checks
     if user_email != channel.owner.email.lower():
         return standup.utils.json_response(**utils.CHANNEL_OWNER_PERMISSION)
 
@@ -178,6 +180,19 @@ def invite_user_to_channel(request):
         invite_user = User.objects.get(email__iexact=invite_email)
     except User.DoesNotExist:
         return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+
+    # Add user
+    try:
+        membership = models.ChannelMember(user=invite_user, channel=channel)
+        membership.save()
+    except IntegrityError:
+        return standup.utils.json_response(
+            payload={},
+            message="Failed to invite user",
+            error="INTERNAL_DB_ERR",
+            json_status=500,
+            http_status=500
+        )
 
     return standup.utils.json_response(
         payload={"invite_email": invite_user.email},
