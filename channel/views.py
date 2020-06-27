@@ -70,6 +70,11 @@ def list_channels(request):
     except User.DoesNotExist:
         return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
 
+    user_channels = user.channel_set.all()
+    member_channels = [
+        member.channel
+        for member in user.channelmember_set.exclude(channel__in=user_channels)
+    ]
     channels = [
         {
             "channel_name": channel.name,
@@ -77,7 +82,7 @@ def list_channels(request):
             "channel_id": channel.id,
             "archived": channel.archived,
         }
-        for channel in user.channel_set.all()
+        for channel in list(user_channels) + member_channels
     ]
     return standup.utils.json_response(payload=channels)
 
