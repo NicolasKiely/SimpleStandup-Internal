@@ -17,4 +17,4 @@ class Notification(models.Model):
     role = models.CharField(max_length=16, null=False, default="")
 
     #: Flag set if notification has been dismissed
-    dismissed = models.BooleanField(null=False, default=True)
+    dismissed = models.BooleanField(null=False, default=False)
