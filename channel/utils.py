@@ -21,13 +21,6 @@ ARGS_INVALID_CHANNEL = {
     "http_status": 400
 }
 
-USER_DOES_NOT_EXIST = {
-    "message": "Could not identify user",
-    "error": "NO_USER",
-    "json_status": 400,
-    "http_status": 400
-}
-
 CHANNEL_ALREADY_EXISTS = {
     "message": "Channel already exists",
     "error": "CHANNEL_EXISTS",

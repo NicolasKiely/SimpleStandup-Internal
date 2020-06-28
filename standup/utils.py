@@ -29,6 +29,14 @@ NOT_IMPLEMENTED_RESPONSE = {
     'http_status': 500
 }
 
+#: User not found
+USER_DOES_NOT_EXIST = {
+    "message": "Could not identify user",
+    "error": "NO_USER",
+    "json_status": 400,
+    "http_status": 400
+}
+
 
 def json_response(
         payload: Optional[Union[List, Dict]] = None,

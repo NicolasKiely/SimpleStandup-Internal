@@ -28,7 +28,7 @@ def create_channel(request):
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
 
     prexisting = models.Channel.objects.filter(
         owner=user, name__iexact=channel_name
@@ -69,7 +69,7 @@ def list_channels(request):
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
 
     user_channels = user.channel_set.all()
     member_channels = [
@@ -185,7 +185,7 @@ def invite_user_to_channel(request):
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
 
     # Verification checks
     if user_email != channel.owner.email.lower():
@@ -200,7 +200,7 @@ def invite_user_to_channel(request):
     try:
         invite_user = User.objects.get(email__iexact=invite_email)
     except User.DoesNotExist:
-        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
 
     invites = models.ChannelInvite.objects.filter(
         user=invite_user, channel=channel
