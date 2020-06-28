@@ -3,6 +3,7 @@ from django.db import IntegrityError
 
 from channel import models
 from channel import utils
+import notification.models
 import standup.utils
 
 
@@ -181,6 +182,11 @@ def invite_user_to_channel(request):
     if err_response:
         return err_response
 
+    try:
+        user = User.objects.get(email__iexact=user_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
+
     # Verification checks
     if user_email != channel.owner.email.lower():
         return standup.utils.json_response(**utils.CHANNEL_OWNER_PERMISSION)
@@ -196,10 +202,29 @@ def invite_user_to_channel(request):
     except User.DoesNotExist:
         return standup.utils.json_response(**utils.USER_DOES_NOT_EXIST)
 
+    invites = models.ChannelInvite.objects.filter(
+        user=invite_user, channel=channel
+    ).count()
+    if invites:
+        return standup.utils.json_response(**utils.USER_ALREADY_INVITED)
+
     # Add user
     try:
-        membership = models.ChannelMember(user=invite_user, channel=channel)
-        membership.save()
+        # membership = models.ChannelMember(user=invite_user, channel=channel)
+        # membership.save()
+
+        note = notification.models.Notification(
+            user=invite_user,
+            message="%s %s (%s) has invited you to the channel %s" % (
+                user.first_name, user.last_name, user.email, channel.name
+            )
+        )
+        note.save()
+        invite = models.ChannelInvite(
+            note=note, user=invite_user, channel=channel
+        )
+        invite.save()
+
     except IntegrityError:
         return standup.utils.json_response(
             payload={},

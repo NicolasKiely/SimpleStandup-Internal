@@ -90,12 +90,12 @@ def get_channel_by_member(
     try:
         channel = models.Channel.objects.get(pk=channel_id_int)
     except models.Channel.DoesNotExist:
-        return standup.utils.json_response(CHANNEL_NOT_FOUND), None, []
+        return standup.utils.json_response(**CHANNEL_NOT_FOUND), None, []
 
     # Get list of members for channel to check if user can see channel
     members = get_channel_members(channel)
     member_emails = [member.email.lower() for member in members]
-    if user_email not in member_emails:
-        return standup.utils.json_response(CHANNEL_NOT_FOUND), None, []
+    if user_email.lower() not in member_emails:
+        return standup.utils.json_response(**CHANNEL_NOT_FOUND), None, []
 
     return None, channel, members

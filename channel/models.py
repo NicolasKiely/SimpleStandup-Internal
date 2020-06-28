@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+import notification.models
+
 
 class Channel(models.Model):
     """ Channel owned by user """
@@ -33,6 +35,23 @@ class ChannelMember(models.Model):
 
     #: If user has moderator control over channel
     is_mod = models.BooleanField(default=False, null=False)
+
+    class Meta:
+        unique_together = ("user", "channel")
+
+
+class ChannelInvite(models.Model):
+    """ Invitation for user to channel """
+    #: Associated notification message for invite
+    note = models.OneToOneField(
+        notification.models.Notification, on_delete=models.CASCADE
+    )
+
+    #: User of invite
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+
+    #: Channel user is invited to
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=False)
 
     class Meta:
         unique_together = ("user", "channel")
