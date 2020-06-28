@@ -18,9 +18,11 @@ from django.urls import path, include
 
 import channel.urls
 import login.urls
+import notification.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include(login.urls, namespace='auth')),
     path("channel/", include(channel.urls, namespace="channel")),
+    path("notify/", include(notification.urls, namespace="notificiations")),
 ]
