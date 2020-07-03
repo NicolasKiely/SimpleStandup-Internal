@@ -21,6 +21,7 @@ def get_unread_notifications(request):
 
     notifications = [
         {
+            "id": note.pk,
             "timestamp": note.dt_created,
             "message": note.message,
             "role": note.role
