@@ -1,4 +1,6 @@
+import base64
 from django.contrib.auth.models import User
+import hashlib
 
 import standup.utils
 
@@ -26,6 +28,13 @@ def get_unread_notifications(request):
             "message": note.message,
             "role": note.role
         }
-        for note in user.notification_set.filter(dismissed=False)
+        for note in user.notification_set.filter(dismissed=False)[:25]
     ]
-    return standup.utils.json_response(payload=notifications)
+    pks = sorted([note["id"] for note in notifications])
+    pk_hash = base64.b64encode(
+        hashlib.md5(",".join(str(pk) for pk in pks).encode("utf8")).digest()
+    ).decode()
+
+    return standup.utils.json_response(
+        payload={"notifications": notifications, "hash": pk_hash}
+    )
