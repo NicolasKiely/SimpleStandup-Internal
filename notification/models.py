@@ -10,6 +10,9 @@ class Notification(models.Model):
     #: When message was created
     dt_created = models.DateTimeField(auto_now_add=True, null=False)
 
+    #: Message title
+    title = models.CharField(max_length=4096, null=False)
+
     #: Message to display
     message = models.CharField(max_length=4096, null=False)
 

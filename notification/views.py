@@ -26,7 +26,8 @@ def get_unread_notifications(request):
             "id": note.pk,
             "timestamp": note.dt_created,
             "message": note.message,
-            "role": note.role
+            "role": note.role,
+            "title": note.title
         }
         for note in user.notification_set.filter(dismissed=False)[:25]
     ]

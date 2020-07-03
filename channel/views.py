@@ -215,8 +215,10 @@ def invite_user_to_channel(request):
 
         note = notification.models.Notification(
             user=invite_user,
-            message="%s %s (%s) has invited you to the channel %s" % (
-                user.first_name, user.last_name, user.email, channel.name
+            title="Channel Invite: %s" % channel.name[:16],
+            role="INVITE",
+            message="You have been invited to channel %s by user %s %s (%s)" % (
+                channel.name, user.first_name, user.last_name, user.email
             )
         )
         note.save()
