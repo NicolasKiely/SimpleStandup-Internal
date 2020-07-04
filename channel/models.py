@@ -15,6 +15,9 @@ class Channel(models.Model):
     #: Soft delete
     archived = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         unique_together = ("owner", "name")
 
@@ -36,6 +39,9 @@ class ChannelMember(models.Model):
     #: If user has moderator control over channel
     is_mod = models.BooleanField(default=False, null=False)
 
+    def __str__(self):
+        return "%s: %s" % (self.channel.name, self.user.email)
+
     class Meta:
         unique_together = ("user", "channel")
 
@@ -52,6 +58,9 @@ class ChannelInvite(models.Model):
 
     #: Channel user is invited to
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=False)
+
+    def __str__(self):
+        return "%s: %s" % (self.channel.name, self.user.email)
 
     class Meta:
         unique_together = ("user", "channel")

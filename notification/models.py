@@ -21,3 +21,6 @@ class Notification(models.Model):
 
     #: Flag set if notification has been dismissed
     dismissed = models.BooleanField(null=False, default=False)
+
+    def __str__(self):
+        return "[%s] %s" % (self.user.email, self.title)
