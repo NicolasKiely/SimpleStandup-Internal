@@ -37,6 +37,14 @@ USER_DOES_NOT_EXIST = {
     "http_status": 400
 }
 
+#: Notification not found
+NOTIFICATION_DOES_NOT_EXIST = {
+    "message": "Could not find notification",
+    "error": "NO_NOTIFICATION",
+    "json_status": 404,
+    "http_status": 404
+}
+
 
 def json_response(
         payload: Optional[Union[List, Dict]] = None,
@@ -96,3 +104,18 @@ def check_request_secret(request) -> Tuple[bool, Optional[JsonResponse], Dict]:
         error_response = JsonResponse(BAD_SECRET_RESPONSE)
         error_response.status_code = 403
         return True, error_response, request_args
+
+
+def parse_bool(value: Union[bool, str]) -> bool:
+    """ Parses value as boolean """
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, str):
+        lvalue = value.lower()
+        if lvalue == "true":
+            return True
+        if lvalue == "false":
+            return False
+        raise ValueError("Invalid boolean value")
+    raise ValueError("Invalid boolean type")
