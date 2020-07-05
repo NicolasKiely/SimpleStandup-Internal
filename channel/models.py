@@ -64,3 +64,26 @@ class ChannelInvite(models.Model):
 
     class Meta:
         unique_together = ("user", "channel")
+
+
+class ChannelMessage(models.Model):
+    """ Message posted to channel """
+    #: Date posted
+    dt_posted = models.DateField(null=False)
+
+    #: Message body posted
+    message = models.CharField(max_length=4096)
+
+    #: Author of message
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+
+    #: Message's channel
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=False)
+
+    def __str__(self):
+        return "[%s] %s %s: %s" % (
+            self.channel.name, self.dt_posted, self.user.email, self.message
+        )
+
+    class Meta:
+        unique_together = ("user", "channel", "dt_posted")
