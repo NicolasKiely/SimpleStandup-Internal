@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+import datetime as dtt
 
 from channel import models
 from channel import utils
@@ -210,9 +211,6 @@ def invite_user_to_channel(request):
 
     # Add user
     try:
-        # membership = models.ChannelMember(user=invite_user, channel=channel)
-        # membership.save()
-
         note = notification.models.Notification(
             user=invite_user,
             title="Channel Invite: %s" % channel.name[:16],
@@ -239,4 +237,75 @@ def invite_user_to_channel(request):
     return standup.utils.json_response(
         payload={"invite_email": invite_user.email},
         message="Invite sent to user"
+    )
+
+
+def message_channel(request):
+    """ POST handler for posting messages to a channel
+
+    POST Parameters:
+        - dt_posted: Target date of message
+        - channel_id: ID of channel to post to
+        - message: Message text
+    """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    # Fetch arguments
+    user_email = request.headers.get("X-USER-EMAIL").lower()
+    err = standup.utils.assert_required_args(
+        args, "dt_posted", "channel_id", "message"
+    )
+    if err:
+        return err
+    posted = args.get("dt_posted")
+    channel_id = args.get("channel_id")
+    message = args.get("message")
+
+    try:
+        dt_posted = dtt.date.fromisoformat(posted)
+    except ValueError:
+        return standup.utils.json_response(
+            error="INVALID_ARG",
+            message="Bad value for dt_posted, must be ISO",
+            json_status=400,
+            http_status=400
+        )
+
+    try:
+        user = User.objects.get(email__iexact=user_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
+
+    err_response, channel, members = utils.get_channel_by_member(
+        user_email, channel_id
+    )
+    if err_response:
+        return err_response
+
+    # Check to see if message already exists
+    channel_message = models.ChannelMessage.objects.filter(
+        user=user, dt_posted=dt_posted, channel_id=channel_id
+    ).first()
+    if channel_message is None:
+        channel_message = models.ChannelMessage(
+            user=user, dt_posted=dt_posted, channel_id=channel_id
+        )
+    channel_message.message = message
+
+    try:
+        channel_message.save()
+    except IntegrityError:
+        return standup.utils.json_response(
+            payload={},
+            message="Failed to post message",
+            error="INTERNAL_DB_ERR",
+            json_status=500,
+            http_status=500
+        )
+
+    return standup.utils.json_response(
+        payload={"message_id": channel_message.pk},
+        message="Saved message"
     )

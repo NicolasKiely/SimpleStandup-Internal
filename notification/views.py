@@ -44,7 +44,13 @@ def get_unread_notifications(request):
 
 
 def handle_notification_response(request):
-    """ POST hander for user's response to a notification """
+    """ POST hander for user's response to a notification
+
+    POST Parameters:
+        - notification_id: ID of notification to update
+        - dismissed: Optional boolean value to set notification dismiss flag
+        - invite: Optional value to accept invite associated with notification
+    """
     bad_secret, response, args = standup.utils.check_request_secret(request)
     if bad_secret:
         return response

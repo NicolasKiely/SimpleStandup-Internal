@@ -119,3 +119,22 @@ def parse_bool(value: Union[bool, str]) -> bool:
             return False
         raise ValueError("Invalid boolean value")
     raise ValueError("Invalid boolean type")
+
+
+def assert_required_args(args: Dict, *names: str) -> Optional[JsonResponse]:
+    """ Asserts that arguments are in dictionary
+
+    :param args: Dictionary of argument values
+    :param names: Name of arguments to load
+    :return: Error response if failed, or None if okay
+    """
+    for arg_name in names:
+        if arg_name not in args:
+            err_response = json_response(
+                error="MISSING_ARG",
+                message="No value for %s" % arg_name,
+                json_status=400,
+                http_status=400
+            )
+            return err_response
+    return None
