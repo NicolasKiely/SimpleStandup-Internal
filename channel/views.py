@@ -309,3 +309,70 @@ def message_channel(request):
         payload={"message_id": channel_message.pk},
         message="Saved message"
     )
+
+
+def list_logs(request):
+    """ Endpoint to handle request to list logs """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    user_email = request.headers.get("X-USER-EMAIL").lower()
+    err = standup.utils.assert_required_args(
+        args, "dt_start", "dt_end", "channel_id",
+    )
+    if err:
+        return err
+
+    channel_id = args["channel_id"]
+
+    # Get channel
+    err_response, channel, members = utils.get_channel_by_member(
+        user_email, channel_id
+    )
+    if err_response:
+        return err_response
+
+    # Get date range
+    try:
+        dt_start = dtt.date.fromisoformat(args["dt_start"])
+    except ValueError:
+        return standup.utils.json_response(
+            error="INVALID ARG",
+            message="Invalid ISO date for start date, must be YYYY-MM-DD",
+            json_status=400,
+            http_status=400
+        )
+
+    try:
+        dt_end = dtt.date.fromisoformat(args["dt_end"])
+    except ValueError:
+        return standup.utils.json_response(
+            error="INVALID ARG",
+            message="Invalid ISO date for end date, must be YYYY-MM-DD",
+            json_status=400,
+            http_status=400
+        )
+
+    if dt_start > dt_end:
+        # Swap date range if reversed
+        dt_start, dt_end = dt_end, dt_end
+
+    dt_delta = (dt_end - dt_start).days
+    if dt_delta > 31:
+        return standup.utils.json_response(
+            error="INVALID RANGE",
+            message="Date range too large",
+            json_status=400,
+            http_status=400
+        )
+
+    # Get sorted list of dates
+    dt_range = [
+        {"date": dt_start + dtt.timedelta(i), "messages": []}
+        for i in range(dt_delta+1)
+    ]
+
+    return standup.utils.json_response(
+        payload={"logs": dt_range}
+    )
