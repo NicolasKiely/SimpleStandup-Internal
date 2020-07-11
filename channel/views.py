@@ -370,8 +370,31 @@ def list_logs(request):
     # Get sorted list of dates
     dt_range = [
         {"date": dt_start + dtt.timedelta(i), "messages": []}
-        for i in range(dt_delta+1)
+        for i in range(dt_delta)
     ]
+
+    # Get list of logs
+    messages = channel.channelmessage_set.filter(
+        dt_posted__gte=dt_start, dt_posted__lte=dt_end
+    )
+    for message in messages:
+        dt_i = (message.dt_posted - dt_start).days
+        try:
+            dt_range[dt_i]["messages"].append({
+                "user": {
+                    "email": message.user.email,
+                    "first_name": message.user.first_name,
+                    "last_name": message.user.last_name
+                },
+                "message": message.message
+            })
+        except IndexError:
+            return standup.utils.json_response(
+                error="INTERNAL EXC",
+                message="Internal error loading dates of messages",
+                json_status=500,
+                http_status=500
+            )
 
     return standup.utils.json_response(
         payload={"logs": dt_range}
