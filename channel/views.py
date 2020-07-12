@@ -358,6 +358,8 @@ def list_logs(request):
         # Swap date range if reversed
         dt_start, dt_end = dt_end, dt_end
 
+    print("Processing %s - %s" % (args["dt_start"], args["dt_end"]))
+
     dt_delta = (dt_end - dt_start).days
     if dt_delta > 31:
         return standup.utils.json_response(
@@ -370,7 +372,7 @@ def list_logs(request):
     # Get sorted list of dates
     dt_range = [
         {"date": dt_start + dtt.timedelta(i), "messages": []}
-        for i in range(dt_delta)
+        for i in range(dt_delta+1)
     ]
 
     # Get list of logs
