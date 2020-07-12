@@ -1,3 +1,4 @@
+import datetime as dtt
 from typing import List, Optional, Tuple
 
 from django.contrib.auth.models import User
@@ -92,3 +93,8 @@ def get_channel_by_member(
         return standup.utils.json_response(**CHANNEL_NOT_FOUND), None, []
 
     return None, channel, members
+
+
+def parse_iso_date_str(date_str: str):
+    """ Parses iso date string """
+    return dtt.date(*map(int, date_str.split("-")))

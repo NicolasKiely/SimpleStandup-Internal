@@ -264,7 +264,7 @@ def message_channel(request):
     message = args.get("message")
 
     try:
-        dt_posted = dtt.date.fromisoformat(posted)
+        dt_posted = utils.parse_iso_date_str(posted)
     except ValueError:
         return standup.utils.json_response(
             error="INVALID_ARG",
@@ -335,8 +335,8 @@ def list_logs(request):
 
     # Get date range
     try:
-        dt_start = dtt.date.fromisoformat(args["dt_start"])
-    except ValueError:
+        dt_start = utils.parse_iso_date_str(args["dt_start"])
+    except (ValueError, TypeError):
         return standup.utils.json_response(
             error="INVALID ARG",
             message="Invalid ISO date for start date, must be YYYY-MM-DD",
@@ -345,8 +345,8 @@ def list_logs(request):
         )
 
     try:
-        dt_end = dtt.date.fromisoformat(args["dt_end"])
-    except ValueError:
+        dt_end = utils.parse_iso_date_str(args["dt_end"])
+    except (ValueError, TypeError):
         return standup.utils.json_response(
             error="INVALID ARG",
             message="Invalid ISO date for end date, must be YYYY-MM-DD",
