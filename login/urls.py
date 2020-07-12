@@ -13,4 +13,8 @@ urlpatterns = [
         'user/login', views.authenticate_user,
         name='authenticate-user'
     ),
+    path(
+        'user/settings/get', views.get_user_settings,
+        name='get-user-settings'
+    ),
 ]

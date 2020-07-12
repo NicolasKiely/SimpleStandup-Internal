@@ -107,3 +107,20 @@ def authenticate_user(request):
             error='AUTH_FAILED',
             json_status=403
         )
+
+
+def get_user_settings(request):
+    """ GET handler for fetching user's settings """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    user_email = request.headers.get("X-USER-EMAIL").lower()
+    try:
+        user = User.objects.get(email__iexact=user_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
+
+    return standup.utils.json_response(
+        payload={"user": {"first_name": user.first_name, "last_name": user.last_name}}
+    )
