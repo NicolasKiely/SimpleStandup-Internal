@@ -122,5 +122,44 @@ def get_user_settings(request):
         return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
 
     return standup.utils.json_response(
-        payload={"user": {"first_name": user.first_name, "last_name": user.last_name}}
+        payload={
+            "user": {
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email
+            }
+        }
+    )
+
+
+def set_user_name(request):
+    """ POST hander for setting user's name """
+    bad_secret, response, args = standup.utils.check_request_secret(request)
+    if bad_secret:
+        return response
+
+    err = standup.utils.assert_required_args(args, "first_name", "last_name")
+    if err:
+        return err
+
+    first_name = args["first_name"]
+    last_name = args["last_name"]
+    user_email = request.headers.get("X-USER-EMAIL").lower()
+    try:
+        user = User.objects.get(email__iexact=user_email)
+    except User.DoesNotExist:
+        return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
+
+    user.first_name = first_name
+    user.last_name = last_name
+    user.save()
+
+    return standup.utils.json_response(
+        payload={
+            "user": {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
+        }
     )

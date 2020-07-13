@@ -17,4 +17,8 @@ urlpatterns = [
         'user/settings/get', views.get_user_settings,
         name='get-user-settings'
     ),
+    path(
+        'user/settings/name', views.set_user_name,
+        name='set-user-name'
+    ),
 ]
