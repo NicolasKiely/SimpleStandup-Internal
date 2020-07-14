@@ -142,13 +142,30 @@ def set_user_name(request):
     if err:
         return err
 
-    first_name = args["first_name"]
-    last_name = args["last_name"]
+    first_name = args["first_name"].strip()
+    last_name = args["last_name"].strip()
     user_email = request.headers.get("X-USER-EMAIL").lower()
     try:
         user = User.objects.get(email__iexact=user_email)
     except User.DoesNotExist:
         return standup.utils.json_response(**standup.utils.USER_DOES_NOT_EXIST)
+
+    name_len = len(user.first_name) + len(user.last_name)
+    if name_len > 32:
+        return standup.utils.json_response(
+            message="User name is too long",
+            error="BAD_NAME",
+            json_status=400,
+            http_status=400
+        )
+
+    if name_len <= 0:
+        return standup.utils.json_response(
+            message="USer name is too short",
+            error="BAD_NAME",
+            json_status=400,
+            http_status=400
+        )
 
     user.first_name = first_name
     user.last_name = last_name
